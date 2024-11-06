@@ -12,79 +12,96 @@ library File {
 
     Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    error ContractNotFound(string deployFile, string contractName, string timestamp, uint256 chainId);
+    error ContractNotFound(string targetFile, string contractName, string timestamp, uint256 chainId);
 
-    struct Data {
+    struct DeploymentData {
         string name;
         address addr;
     }
 
-    function exportContracts(string memory outputPath, string memory deployFile, uint256 chainId) internal {
+    function exportDeployments(string memory outputPath, string memory targetFile) internal {
+        exportDeployments(outputPath, targetFile, block.chainid);
+    }
+
+    function exportDeployments(string memory outputPath, string memory targetFile, uint256 chainId) internal {
         if (!vm.exists(outputPath)) {
             vm.createDir(outputPath, true);
         }
 
         string memory fileName = string.concat(outputPath, vm.toString(chainId), ".json");
-        string memory json = string.concat("{", getDeployedContracts(deployFile, chainId, "run-latest"), "}");
+        string memory json = string.concat("{", loadDeployments(targetFile, chainId, "run-latest"), "}");
         vm.writeFile(fileName, json);
     }
 
-    function getDeployedContracts(string memory deployFile, uint256 chainId, string memory time)
+    function loadDeployments(string memory targetFile, uint256 chainId, string memory time)
         internal
         view
-        returns (string memory)
+        returns (string memory contractsJson)
     {
-        string memory latestRunPath =
-            string.concat("broadcast/", deployFile, "/", vm.toString(chainId), "/", time, ".json");
-        string memory latestRun = vm.readFile(latestRunPath);
-        uint256 totalTxs = latestRun.readStringArray(".transactions").length;
-
-        string memory contractsJson = "";
+        string memory broadcast = loadBroadcast(targetFile, chainId, time);
+        uint256 totalTxs = broadcast.readStringArray(".transactions").length;
 
         for (uint32 i = 0; i < totalTxs; i++) {
-            string memory txType = latestRun.readString(buildTxsPath(i, "transactionType"));
-            if (txType.equal("CREATE")) {
-                string memory contractName = latestRun.readString(buildTxsPath(i, "contractName"));
-                address contractAddress = latestRun.readAddress(buildTxsPath(i, "contractAddress"));
+            string memory txType = broadcast.readString(_buildTxsPath(i, "transactionType"));
 
-                Data memory data = Data(contractName, contractAddress);
-                contractsJson = string.concat(contractsJson, buildContractJson(data));
+            if (txType.equal("CREATE")) {
+                string memory contractName = broadcast.readString(_buildTxsPath(i, "contractName"));
+                address contractAddress = broadcast.readAddress(_buildTxsPath(i, "contractAddress"));
+
+                DeploymentData memory data = DeploymentData(contractName, contractAddress);
+                contractsJson = _join(contractsJson, _buildContractJson(data));
             }
         }
-
-        return contractsJson;
     }
 
-    function getContract(string memory deployFile, string memory contractName) internal view returns (address) {
-        return getContract(deployFile, contractName, "run-latest", block.chainid);
+    function getContract(string memory targetFile, string memory contractName) internal view returns (address) {
+        return getContract(targetFile, contractName, block.chainid, "run-latest");
     }
 
-    function getContract(string memory deployFile, string memory contractName, string memory time, uint256 chainId)
+    function getContract(string memory targetFile, string memory contractName, uint256 chainId, string memory time)
         internal
         view
         returns (address)
     {
-        string memory latestRunPath =
-            string.concat("broadcast/", deployFile, "/", vm.toString(chainId), "/", time, ".json");
-        string memory latestRun = vm.readFile(latestRunPath);
-        uint256 totalTxs = latestRun.readStringArray(".transactions").length;
+        string memory broadcast = loadBroadcast(targetFile, chainId, time);
+        uint256 totalTxs = broadcast.readStringArray(".transactions").length;
 
         for (uint32 i = 0; i < totalTxs; i++) {
-            string memory _contractName = latestRun.readString(buildTxsPath(i, "contractName"));
+            string memory _contractName = broadcast.readString(_buildTxsPath(i, "contractName"));
 
             if (_contractName.equal(contractName)) {
-                return latestRun.readAddress(buildTxsPath(i, "contractAddress"));
+                return broadcast.readAddress(_buildTxsPath(i, "contractAddress"));
             }
         }
 
-        revert ContractNotFound(deployFile, contractName, time, chainId);
+        revert ContractNotFound(targetFile, contractName, time, chainId);
     }
 
-    function buildContractJson(Data memory data) internal pure returns (string memory) {
-        return string.concat('"', data.name, '": {"address": "', data.addr.toHexString(), '"},');
+    function loadBroadcast(string memory targetFile, uint256 chainId, string memory time)
+        public
+        view
+        returns (string memory)
+    {
+        string memory latestRunPath =
+            string.concat("broadcast/", targetFile, "/", vm.toString(chainId), "/", time, ".json");
+        return vm.readFile(latestRunPath);
     }
 
-    function buildTxsPath(uint32 index, string memory field) private pure returns (string memory path) {
-        path = string.concat("$.transactions[", vm.toString(index), "].", field);
+    /// ---- PRIVATE FUNCTIONS ---- ///
+
+    function _join(string memory json, string memory newField) private pure returns (string memory) {
+        if (json.equal("")) {
+            return newField;
+        }
+
+        return string.concat(json, ",", newField);
+    }
+
+    function _buildContractJson(DeploymentData memory data) private pure returns (string memory) {
+        return string.concat('"', data.name, '": "', data.addr.toHexString(), '"');
+    }
+
+    function _buildTxsPath(uint32 index, string memory field) private pure returns (string memory) {
+        return string.concat("$.transactions[", vm.toString(index), "].", field);
     }
 }

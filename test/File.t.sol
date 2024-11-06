@@ -11,11 +11,12 @@ contract FileTest is Test {
     }
 
     function test_GetContractChainId() external view {
-        address contractAddress = File.getContract("Token.s.sol", "Token", "run-1730855487", 17000);
+        address contractAddress = File.getContract("Token.s.sol", "Token", 17000, "run-1730855487");
         assertEq(contractAddress, address(0x8d375dE3D5DDde8d8caAaD6a4c31bD291756180b));
     }
 
     function test_exportFile() external {
-        File.exportContracts("deployments/test/", "Token.s.sol", 17000);
+        File.exportDeployments("deployments/test/", "Token.s.sol", 17000);
+        File.exportDeployments("deployments/test/", "Token.s.sol", 31337);
     }
 }

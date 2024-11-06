@@ -1,4 +1,4 @@
 {
-  "Token": { "address": "0x9852795dbb01913439f534b4984fbf74ac8afa12" },
-  "Token2": { "address": "0x889d9a5af83525a2275e41464faecccb3337ff60" }
+  "Token": "0x9852795dbb01913439f534b4984fbf74ac8afa12",
+  "Token2": "0x889d9a5af83525a2275e41464faecccb3337ff60"
 }
