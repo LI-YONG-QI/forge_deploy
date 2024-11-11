@@ -6,7 +6,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-library File {
+library Broadcast {
     using stdJson for *;
     using Strings for *;
 
@@ -30,6 +30,7 @@ library File {
 
         string memory fileName = string.concat(outputPath, vm.toString(chainId), ".json");
         string memory json = string.concat("{", loadDeployments(targetFile, chainId, "run-latest"), "}");
+
         vm.writeFile(fileName, json);
     }
 
@@ -38,7 +39,7 @@ library File {
         view
         returns (string memory contractsJson)
     {
-        string memory broadcast = loadBroadcast(targetFile, chainId, time);
+        string memory broadcast = load(targetFile, chainId, time);
         uint256 totalTxs = broadcast.readStringArray(".transactions").length;
 
         for (uint32 i = 0; i < totalTxs; i++) {
@@ -63,7 +64,7 @@ library File {
         view
         returns (address)
     {
-        string memory broadcast = loadBroadcast(targetFile, chainId, time);
+        string memory broadcast = load(targetFile, chainId, time);
         uint256 totalTxs = broadcast.readStringArray(".transactions").length;
 
         for (uint32 i = 0; i < totalTxs; i++) {
@@ -77,14 +78,14 @@ library File {
         revert ContractNotFound(targetFile, contractName, time, chainId);
     }
 
-    function loadBroadcast(string memory targetFile, uint256 chainId, string memory time)
+    function load(string memory targetFile, uint256 chainId, string memory time)
         public
         view
-        returns (string memory)
+        returns (string memory json)
     {
         string memory latestRunPath =
             string.concat("broadcast/", targetFile, "/", vm.toString(chainId), "/", time, ".json");
-        return vm.readFile(latestRunPath);
+        json = vm.readFile(latestRunPath);
     }
 
     /// ---- PRIVATE FUNCTIONS ---- ///

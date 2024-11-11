@@ -10,9 +10,9 @@ contract Token {
 }
 
 contract Token2 {
-    bool isTrue;
+    Token token;
 
-    constructor(bool _isTrue) {
-        isTrue = _isTrue;
+    constructor(Token _token) {
+        token = _token;
     }
 }
