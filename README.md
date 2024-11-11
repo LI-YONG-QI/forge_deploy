@@ -1,66 +1,78 @@
-## Foundry
+# Forge Deploy
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Forge Deploy aims to improve the deployment experience for developers by offering a quick and standardized deployment pattern suited for small to medium-sized projects. It reduces the need for handling multi-chain and cross-state deployment issues. Large projects can also benefit by customizing their own requirements using the provided library.
 
-Foundry consists of:
+Forge Deploy includes a library for reading broadcast data, allowing for filtering and exporting specific data to files. Additionally, various deployment-friendly features will continue to be added in the future, such as setting parameters for different chains and automatically generating verification scripts.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+# Why Forge Deploy?
 
-## Documentation
+Foundry lacks comprehensive functionality to assist with more complex contract deployment scenarios and does not offer a quick and convenient way to read/write data from broadcasts and other file. Unlike Hardhat, which supports TypeScript and Ignition Modular for writing flexible scripts, Foundry is limited to Solidity. Although it offers VM cheatcodes, some functions are still too low-level. Therefore, abstracting complex cheatcodes can help people get started quickly and build robust projects.
 
-https://book.getfoundry.sh/
+While reviewing the source code of various protocols, I've noticed that most of them require exporting deployed contract data. To achieve this, it’s necessary to read broadcast transaction data and then export it. However, repeatedly writing functions for querying is annoying, especially since developers often have similar requirements for development. Forge Deploy can help developers reduce the complexity of handling JSON data in these processes.
 
-## Usage
+# Getting Started
 
-### Build
+## Setup
 
-```shell
-$ forge build
+Clone repo
+
+```sh
+git clone https://github.com/LI-YONG-QI/forge_deploy.git
 ```
 
-### Test
+Anvil
 
-```shell
-$ forge test
+```sh
+anvil
 ```
 
-### Format
+## Demo
 
-```shell
-$ forge fmt
+1. Check & Deploy `Token` contract with `Token.s.sol`
+
+```sh
+forge script script/Token.s.sol --broadcast --rpc-url 127.0.0.1:8545
 ```
 
-### Gas Snapshots
+Output:
 
-```shell
-$ forge snapshot
+```sh
+== Logs ==
+  Token address:  0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
 ```
 
-### Anvil
+2. Check & Deploy `Token2` contract with `Token2.s.sol`
 
-```shell
-$ anvil
+The `Token2` contract constructor need to input deployed Token contract address
+
+```sh
+forge script script/Token2.s.sol --broadcast --rpc-url 127.0.0.1:8545
 ```
 
-### Deploy
+Output:
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```sh
+== Logs ==
+  Token address:  0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+  Token2 address:  0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
 ```
 
-### Cast
+# Libraries
 
-```shell
-$ cast <subcommand>
-```
+The default values for `chainid` and `time` are `block.chainid and `run-latest` respectively.
 
-### Help
+The broadcast folder structure is `broadcast/targetFile/chainid/time.json`
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## Broadcast
+
+- `getContract(string memory targetFile, string memory contractName, uint256 chainId, string memory time)`
+
+Get contract address from targetFile (e.g. Token.s.sol) in broadcast file.
+
+- `loadDeployments(string memory targetFile, uint256 chainId, string memory time)`
+
+Get all deployed contracts address in `broadcast/targetFile`
+
+- `load(string memory targetFile, uint256 chainId, string memory time)`
+
+Get all json data in targetFile
