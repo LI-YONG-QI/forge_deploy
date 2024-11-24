@@ -2,20 +2,16 @@
 pragma solidity ^0.8.20;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Broadcast} from "../src/Broadcast.sol";
+import {Config} from "../src/Config.sol";
 
-contract FileTest is Test {
-    function test_GetContract() external {
-        Broadcast.Contract memory c = Broadcast.getContract("Token.s.sol", "Token");
-        //assertEq(c.addr, address(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512));
-        console.log("Contract address: ", address(c.addr));
-        console.log(c.deployer);
-        console.log(c.name);
-        console.logBytes32(c.txHash);
-        console.log(c.args.length);
-        console.log(c.args[0]);
-        console.log(c.chainId);
-        console.log(c.tiemstamp);
+contract ConfigTest is Test {
+    function test_loadConfig() external {
+        string memory config = Config.load("token", 31337);
+
+        //assertEq(c.addr, address(0xe7f1725Ee7734CE288F8367e1Bb143E90bb3F0512));
+        // console.log("Contract address: ", config.length);
+        // console.log("Contract address: ", config[0]);
+        // console.log("Contract address: ", config[1]);
     }
 
     // function test_GetContractChainId() external {

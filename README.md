@@ -59,7 +59,7 @@ Output:
 
 # Libraries
 
-The default values for `chainid` and `time` are `block.chainid and `run-latest` respectively.
+The default values for `chainid` and `time` are `block.chainid` and `run-latest` respectively.
 
 The broadcast folder structure is `broadcast/targetFile/chainid/time.json`
 
