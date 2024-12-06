@@ -8,11 +8,3 @@ contract Token {
         number = _number;
     }
 }
-
-contract Token2 {
-    Token token;
-
-    constructor(Token _token) {
-        token = _token;
-    }
-}
